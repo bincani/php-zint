@@ -6,6 +6,7 @@
 #include <zint.h>
 
 #include "php.h"
+#include "php_version.h"
  
 #define PHP_ZINT_VERSION "0.5"
 #define PHP_ZINT_EXTNAME "zint"
@@ -109,12 +110,19 @@ PHP_FUNCTION(zint_barcode_file)
 		params_hash = Z_ARRVAL_P(optional_params);
 		params_count = zend_hash_num_elements(params_hash);
 		for (zend_hash_internal_pointer_reset_ex(params_hash, &pointer); 
+#if PHP_MAJOR_VERSION == 7
 		   zend_hash_get_current_data(params_hash) == SUCCESS;
+#else
+	           zend_hash_get_current_data_ex(params_hash, (void **)&data, &pointer) == SUCCESS;
+#endif
 		   zend_hash_move_forward_ex(params_hash, &pointer)) {
 			zval temp = **data;
 			zval_copy_ctor(&temp);
-
+#if PHP_MAJOR_VERSION == 7
 			if (zend_hash_get_current_key(params_hash, &key, &key_len) == HASH_KEY_IS_STRING) {
+#else
+			if (zend_hash_get_current_key_ex(params_hash, &key, &key_len, &index, 0, &pointer) == HASH_KEY_IS_STRING) {
+#endif
 				if (strcmp(key, "height") == 0) {
 					if (Z_TYPE(temp) == IS_LONG && Z_LVAL(temp) < 1000) {
 						barcode->height = Z_LVAL(temp);
@@ -212,12 +220,20 @@ PHP_FUNCTION(zint_barcode_file)
 			RETVAL_BOOL(1);
 		} else {
 			// return error_code on error
+#if PHP_MAJOR_VERSION == 7			
 			RETVAL_STRINGL(barcode->errtxt, 1);
+#else
+			RETVAL_STRING(barcode->errtxt, 1);
+#endif
 		}
 
 		// cleanup structure
 		ZBarcode_Delete(barcode);
 	} else {
+#if PHP_MAJOR_VERSION == 7
 		RETVAL_STRINGL("error: no input data given", 1);
+#else
+		RETVAL_STRING("error: no input data given", 1);
+#endif
 	}
 }
