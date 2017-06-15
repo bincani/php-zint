@@ -109,12 +109,12 @@ PHP_FUNCTION(zint_barcode_file)
 		params_hash = Z_ARRVAL_P(optional_params);
 		params_count = zend_hash_num_elements(params_hash);
 		for (zend_hash_internal_pointer_reset_ex(params_hash, &pointer); 
-		   zend_hash_get_current_data_ex(params_hash, (void **)&data, &pointer) == SUCCESS; 
+		   zend_hash_get_current_data(params_hash) == SUCCESS;
 		   zend_hash_move_forward_ex(params_hash, &pointer)) {
 			zval temp = **data;
 			zval_copy_ctor(&temp);
 
-			if (zend_hash_get_current_key_ex(params_hash, &key, &key_len, &index, 0, &pointer) == HASH_KEY_IS_STRING) {
+			if (zend_hash_get_current_key(params_hash, &key, &key_len) == HASH_KEY_IS_STRING) {
 				if (strcmp(key, "height") == 0) {
 					if (Z_TYPE(temp) == IS_LONG && Z_LVAL(temp) < 1000) {
 						barcode->height = Z_LVAL(temp);
@@ -212,12 +212,12 @@ PHP_FUNCTION(zint_barcode_file)
 			RETVAL_BOOL(1);
 		} else {
 			// return error_code on error
-			RETVAL_STRING(barcode->errtxt, 1);
+			RETVAL_STRINGL(barcode->errtxt, 1);
 		}
 
 		// cleanup structure
 		ZBarcode_Delete(barcode);
 	} else {
-		RETVAL_STRING("error: no input data given", 1);
+		RETVAL_STRINGL("error: no input data given", 1);
 	}
 }
